@@ -1,5 +1,7 @@
+using System;
 using Unity.Collections;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.TLS;
 
 namespace StinkySteak.Networking
 {
@@ -10,8 +12,14 @@ namespace StinkySteak.Networking
         private NetworkDriver _driver;
         private NetworkConnection _serverConnection;
         private string _text;
+
         private bool _isDone;
         private bool _isError;
+
+        private bool _useEncryption;
+        private string _serverCommonName;
+        private string _clientCaCertificate;
+
         public string Text => _text;
         public bool IsDone => _isDone;
         public bool IsError => _isError;
@@ -26,7 +34,7 @@ namespace StinkySteak.Networking
         {
             NetworkEndpoint endpoint = NetworkEndpoint.Parse(_url, (ushort)_serverPort);
 
-            _driver = NetworkDriver.Create(new WebSocketNetworkInterface());
+            _driver = NetworkDriver.Create(new WebSocketNetworkInterface(), GetNetworkSettings());
 
             _serverConnection = _driver.Connect(endpoint);
         }
@@ -43,7 +51,7 @@ namespace StinkySteak.Networking
                 {
                     if (cmd == NetworkEvent.Type.Connect)
                     {
-                        
+
                     }
 
                     if (cmd == NetworkEvent.Type.Data)
@@ -61,6 +69,31 @@ namespace StinkySteak.Networking
                     }
                 }
             }
+        }
+
+        private NetworkSettings GetNetworkSettings()
+        {
+            NetworkSettings settings = new NetworkSettings();
+
+            if (!_useEncryption)
+            {
+                return settings;
+            }
+
+            if (string.IsNullOrEmpty(_serverCommonName))
+            {
+                throw new Exception("In order to use encrypted communications, clients must set the server common name.");
+            }
+            else if (string.IsNullOrEmpty(_clientCaCertificate))
+            {
+                settings.WithSecureClientParameters(_serverCommonName);
+            }
+            else
+            {
+                settings.WithSecureClientParameters(_clientCaCertificate, _serverCommonName);
+            }
+
+            return settings;
         }
 
         public void Dispose()

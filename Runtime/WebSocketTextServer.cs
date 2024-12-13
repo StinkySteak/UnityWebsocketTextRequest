@@ -1,4 +1,6 @@
+using System;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.TLS;
 using UnityEngine;
 
 namespace StinkySteak.Networking
@@ -8,8 +10,11 @@ namespace StinkySteak.Networking
         private int _listenPort;
         private NetworkDriver _driver;
         private string _text;
+        private string _serverCertificate;
+        private string _serverPrivateKey;
+        private bool _setEncryption;
 
-        public WebSocketTextServer( int listenPort)
+        public WebSocketTextServer(int listenPort)
         {
             _listenPort = listenPort;
         }
@@ -19,9 +24,35 @@ namespace StinkySteak.Networking
             _text = content;
         }
 
+        public void SetEncryption(string serverCertificate, string serverPrivateKey)
+        {
+            _setEncryption = true;
+            _serverCertificate = serverCertificate;
+            _serverPrivateKey = serverPrivateKey;
+        }
+
+        private NetworkSettings GetNetworkSettings()
+        {
+            NetworkSettings settings = new NetworkSettings();
+
+            if (!_setEncryption)
+            {
+                return settings;
+            }
+
+            if (string.IsNullOrEmpty(_serverCertificate) || string.IsNullOrEmpty(_serverPrivateKey))
+            {
+                throw new Exception("In order to use encrypted communications, when hosting, you must set the server certificate and key.");
+            }
+
+            settings.WithSecureServerParameters(_serverCertificate, _serverPrivateKey);
+
+            return settings;
+        }
+
         public void Start()
         {
-            _driver = NetworkDriver.Create(new WebSocketNetworkInterface());
+            _driver = NetworkDriver.Create(new WebSocketNetworkInterface(), GetNetworkSettings());
 
             NetworkEndpoint endpoint = NetworkEndpoint.AnyIpv4.WithPort((ushort)_listenPort);
 
