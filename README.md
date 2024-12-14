@@ -13,7 +13,7 @@ This plugin is for unity game developer who wants to host a text server.
 ## Installation
 #### Install via git URL (Package Manager)
 ```
-https://github.com/StinkySteak/UnityUDPTextRequest.git
+https://github.com/StinkySteak/UnityWebsocketTextRequest.git
 ```
 
 ## Compatibility
