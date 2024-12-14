@@ -2,6 +2,8 @@ using System;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.TLS;
+using Unity.Networking.Transport.Utilities;
+using UnityEngine;
 
 namespace StinkySteak.Networking
 {
@@ -23,6 +25,7 @@ namespace StinkySteak.Networking
         public string Text => _text;
         public bool IsDone => _isDone;
         public bool IsError => _isError;
+        public bool IsSuccess => !_isError && _isDone;
 
         public WebSocketTextClient(string url, int serverPort)
         {
@@ -35,8 +38,16 @@ namespace StinkySteak.Networking
             NetworkEndpoint endpoint = NetworkEndpoint.Parse(_url, (ushort)_serverPort);
 
             _driver = NetworkDriver.Create(new WebSocketNetworkInterface(), GetNetworkSettings());
+            _driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
 
             _serverConnection = _driver.Connect(endpoint);
+        }
+
+        public void SetEncryption(string serverCommonName, string clientCaCertificate)
+        {
+            _useEncryption = true;
+            _serverCommonName = serverCommonName;
+            _clientCaCertificate = clientCaCertificate;
         }
 
         public void PollUpdate()
@@ -74,6 +85,7 @@ namespace StinkySteak.Networking
         private NetworkSettings GetNetworkSettings()
         {
             NetworkSettings settings = new NetworkSettings();
+            settings.WithReliableStageParameters();
 
             if (!_useEncryption)
             {

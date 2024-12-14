@@ -1,6 +1,7 @@
 using System;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.TLS;
+using Unity.Networking.Transport.Utilities;
 using UnityEngine;
 
 namespace StinkySteak.Networking
@@ -8,6 +9,7 @@ namespace StinkySteak.Networking
     public class WebSocketTextServer
     {
         private int _listenPort;
+        private NetworkSettings _settings;
         private NetworkDriver _driver;
         private string _text;
         private string _serverCertificate;
@@ -34,6 +36,7 @@ namespace StinkySteak.Networking
         private NetworkSettings GetNetworkSettings()
         {
             NetworkSettings settings = new NetworkSettings();
+            settings.WithReliableStageParameters();
 
             if (!_setEncryption)
             {
@@ -53,6 +56,7 @@ namespace StinkySteak.Networking
         public void Start()
         {
             _driver = NetworkDriver.Create(new WebSocketNetworkInterface(), GetNetworkSettings());
+            var fragmentedPipeline = _driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
 
             NetworkEndpoint endpoint = NetworkEndpoint.AnyIpv4.WithPort((ushort)_listenPort);
 
