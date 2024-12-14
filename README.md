@@ -9,6 +9,7 @@ This plugin is for unity game developer who wants to host a text server.
 - Simple
 - Only supports text format (UTF-8)
 - Max of 512 charactes can be sent (using `FixedString512`)
+- Status: **Beta**
 
 ## Installation
 #### Install via git URL (Package Manager)
